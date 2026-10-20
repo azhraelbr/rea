@@ -724,6 +724,31 @@ Scope limits:
 - AgentShield and other executable ECC tooling remain optional and unvalidated until separately reviewed;
 - no real analysis target or provider behavior was changed or claimed by this integration.
 
+## Upstream refresh validation — 2026-10-20
+
+After merging current REA `origin/main` into the ECC integration branch, the integration was revalidated against the updated JavaScript analysis architecture.
+
+Observed evidence:
+
+- ECC remained pinned to `v2.2.3` / `c05b2d6614f62f6db0047669aa4eefb223d478f9` and the submodule checkout was clean;
+- `npm ci` completed successfully; the resulting dependency audit reported one moderate-severity vulnerability, which was not auto-fixed during the integration update;
+- `npm run typecheck` completed successfully;
+- `npm run lint` completed with zero errors and the module-boundary check passed;
+- `npm run metadata:check` completed successfully;
+- `npm run verify:architecture-guards` passed across the current source tree;
+- `npm run docs:check` completed successfully, including six documentation tasks and five passing README-consistency tests;
+- Knip initially traversed tests inside `third_party/ecc` through Vitest plugin test-entry discovery; REA's `knip.json` now scopes Vitest entries to REA-owned test trees (`src/**/*.test.ts`, `tests/**/*.test.ts`, and `scripts/**/*.test.mjs`), preventing vendored ECC tests from being treated as REA project entries while preserving REA test coverage;
+- `npx knip` then completed with no issues;
+- `src/domain/javascript/javascriptSemanticReturnedReferencesBounded.test.ts` passed all four bounded returned-reference regression cases;
+- `tests/acceptance/applications/javascriptReturnedReferenceCycles.test.ts` passed its recursive alias-web acceptance case;
+- a real `analyze-web-bundle` run against `https://skhola.inmaia.com.br/` completed without JavaScript heap OOM, analyzed the captured 562,525-byte bundle, and visited 171,479 AST nodes;
+- that real bundle analysis reported partial completeness because local returned-reference projections were conservatively widened; the widening is explicit evidence, not a silent success claim;
+- the updated integration does not enable ECC hooks, installers, plugins, MCP integrations, or REA runtime dependencies.
+
+Known limitation from this refresh:
+
+- the full `npm run check` remains blocked by two formatter differences already present in current `origin/main`; those files were verified to have no integration-specific diff and were restored unchanged. The individual typecheck, lint, Knip, metadata, architecture, and documentation gates above passed.
+
 ## Final success test
 
 The final integration test is not merely that the submodule exists.
